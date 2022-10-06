@@ -188,7 +188,41 @@ class UllageBasedTank(Tank):
         ullage,
     ):
         super().__init__(name, diameter, height, endcap, gas, liquid)
+    
+        self.name = name
+        self.diameter = diameter
+        self.height = height
+        self.endcap = endcap
+        self.liquid = liquid
+        self.gas = gas
+        self.ullage = ullage
+
+    def mass(self, t):
+        # self.height is height of cylinder
+        # assuming self.liquid/self.gas is density
+        # self.cap should either be a Disk or Hemisphere class
+
+        # template code. Still buggy
+        def return_mass(time):
+            volume_liquid = 0
+            if self.cap is Disk:
+                cross_sectional_area = self.cap.area()
+                volume_liquid = (self.height-self.ullage) * cross_sectional_area
+                volume_gas = self.cylinder.volume() - volume_liquid
+                return volume_gas*self.gas + volume_liquid*self.liquid
+        return return_mass
+
+    def netMassFlowRate(self, t):
+        # gas going in, mass leaving
         pass
+
+    def liquidVolume(self, t):
+        def return_liquid_volume(time):
+            cross_sectional_area = self.cap.area()
+            volume_liquid = (self.height-self.ullage) * cross_sectional_area
+            return volume_liquid
+        return return_liquid_volume
+
 
 
 # @ompro07
