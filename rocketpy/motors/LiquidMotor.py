@@ -269,10 +269,11 @@ class MassBasedTank(Tank):
         liquid_mfr = (liquid_initial_mass - liquid_current_mass) / t
 
         gas_current_mass = Function.getValue(self.gas_mass, t)
-        gas_mfr = gas_current_mass / t
+        gas_mfr = (0 - gas_current_mass) / t #initial gas mass is 0
 
-        return Function(liquid_mfr - gas_mfr, t)
+        return Function(liquid_mfr + gas_mfr, t)
 
     def liquidVolume(self, t):
         # density = m/V -> V_current = m_current/density
-        return Function(Function.getValue(t, self.liquid_mass) / self.liquid.density, t)
+        current_liquid_mass = Function.getValue(self.liquid_mass, t)
+        return Function(current_liquid_mass / self.liquid.density, t)
