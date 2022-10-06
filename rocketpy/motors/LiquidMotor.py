@@ -226,6 +226,7 @@ class UllageBasedTank(Tank):
 
 
 # @ompro07
+# @PBales1
 class MassBasedTank(Tank):
     def __init__(
         self,
@@ -238,5 +239,40 @@ class MassBasedTank(Tank):
         liquid,
         gas,
     ):
-        super().__init__(name, diameter, height, endcap, gas, liquid)
-        pass
+        super().__init__(
+            name, 
+            diameter, 
+            height, 
+            endcap, 
+            gas, 
+            liquid)
+
+        #Define tank dimensions, fluid properties, and current fluid state
+        self.name = name
+        self.diameter = diameter
+        self.height = height
+        self.endcap = endcap
+        self.liquid_mass = liquid_mass
+        self.gas_mass = gas_mass
+        self.liquid = liquid
+        self.gas = gas
+
+    def mass(self, t):
+        current_mass = Function.getValue(self.liquid_mass, t) + Function.getValue(self.gas_mass, t)
+        return Function(current_mass, t)
+
+    def netMassFlowRate(self, t):
+        tank_volume = 1/4*np.pi*self.height*(self.diameter ** 2) + 2*self.endcap
+
+        liquid_initial_mass = self.liquid.denisty * tank_volume
+        liquid_current_mass = Function.getValue(self.liquid_mass, t)
+        liquid_mfr = (liquid_initial_mass - liquid_current_mass) / t
+
+        gas_current_mass = Function.getValue(self.gas_mass, t)
+        gas_mfr = gas_current_mass / t
+
+        return Function(liquid_mfr - gas_mfr, t)
+
+    def liquidVolume(self, t):
+        # density = m/V -> V_current = m_current/density
+        return Function(Function.getValue(t, self.liquid_mass) / self.liquid.density, t)
