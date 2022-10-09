@@ -210,7 +210,7 @@ class UllageBasedTank(Tank):
         current_height = self.full_height - self.ullage.getValue(t)
         delta_volume = Function(self.tank.filled_volume).differentiate(current_height)
 
-        return delta_volume * self.liquid.density + delta_volume * self.gas.density
+        return -delta_volume * self.liquid.density + delta_volume * self.gas.density
 
     def liquidVolume(self, t):
         return self.tank.filled_volume(self.height-self.ullage.getValue(t))
