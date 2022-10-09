@@ -149,25 +149,29 @@ class Hemisphere(Geometry3D):
 class SphericalCylinder(Geometry3D):
     def __init__(self, radius, height, filled_volume=None):
         self.radius = radius
-        self.height = height
+        self.full_height = height
+        self.cylinder_height = height - 2*radius
         self.sectional_area = Disk(radius).area
         super().__init__(filled_volume)
 
     def volume(self):
-        return 2*Hemisphere(self.radius).volume() + Cylinder(self.radius, self.height).volume()
+        hemispheres = 2*Hemisphere(self.radius).volume()
+        cylinder = Cylinder(self.radius, self.cylinder_height).volume()
+        return hemispheres +  cylinder
 
     @Geometry3D.filled_volume.getter
     def filled_volume(self, h):
         assert h > 0, "height must be greater than zero"
+
         if h < self.radius:
             return Hemisphere(self.radius).filled_volume()
-        elif h < self.height - self.radius:
+        elif h < self.full_height - self.radius:
             resulting_height = h - self.radius
-            return (
-                Hemisphere(self.radius).volume() + Cylinder(self.radius, self.height, resulting_height).filled_volume()
-            )
+            hemisphere = Hemisphere(self.radius).volume()
+            cylinder = Cylinder(self.radius, self.cylinder_height, resulting_height).filled_volume()
+            return hemisphere + cylinder
         else:
-            resulting_height = h - (self.height - self.radius)
+            resulting_height = h - (self.cylinder_height - self.radius)
             fixed_volume = Hemisphere(self.radius).volume() + Cylinder(self.radius, self.height-2*self.radius).volume()
             hemisphere = Hemisphere(self.radius, resulting_height)
             return (
