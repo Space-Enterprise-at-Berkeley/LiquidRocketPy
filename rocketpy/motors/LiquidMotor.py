@@ -12,6 +12,7 @@ from scipy import integrate
 from rocketpy.Function import Function
 from rocketpy.motors import Motor
 from rocketpy.supplement import Disk, Cylinder, Hemisphere
+from rocketpy.motors import Fluid
 
 # @Stano
 class LiquidMotor(Motor):
@@ -43,7 +44,7 @@ class LiquidMotor(Motor):
 
 
 class Tank(ABC):
-    def __init__(self, name, diameter, height, gas, liquid=0, endcap="flat"):
+    def __init__(self, name: str, diameter, height, gas: Fluid, liquid: Fluid = 0, endcap: str = "flat"):
         self.name = name
         self.diameter = diameter
         self.height = height
@@ -54,9 +55,13 @@ class Tank(ABC):
             "flat": Disk(diameter / 2),
             "spherical": Hemisphere(diameter / 2),
         }
-        self.cylinder = Cylinder(diameter / 2, height)
         self.cap = self.capMap.get(endcap)
-        pass
+
+        self.tankMap = {
+            "flat": Cylinder(diameter/2, height),
+            "spherical": SphericalCylinder(diameter/2, height)
+        }
+        self.tank = self.tankMap.get(endcap)
 
     @abstractmethod
     def mass(self, t):
@@ -154,7 +159,6 @@ class Tank(ABC):
         """
         ...
 
-
 # @MrGribel
 class MassFlowRateBasedTank(Tank):
     def __init__(
@@ -182,47 +186,34 @@ class UllageBasedTank(Tank):
         name,
         diameter,
         height,
-        endcap,
-        liquid,
-        gas,
+        endcap: str,
+        liquid: Fluid,
+        gas: Fluid,
         ullage,
     ):
         super().__init__(name, diameter, height, endcap, gas, liquid)
-    
-        self.name = name
-        self.diameter = diameter
-        self.height = height
-        self.endcap = endcap
-        self.liquid = liquid
-        self.gas = gas
-        self.ullage = ullage
+
+        # ullage v. time
+        self.ullage = Function(ullage)
+        
+        # We are not accounting for pressurized fluids
 
     def mass(self, t):
-        # self.height is height of cylinder
-        # assuming self.liquid/self.gas is density
-        # self.cap should either be a Disk or Hemisphere class
+        liquid_volume = self.liquidVolume(t)
 
-        # template code. Still buggy
-        def return_mass(time):
-            volume_liquid = 0
-            if self.cap is Disk:
-                cross_sectional_area = self.cap.area()
-                volume_liquid = (self.height-self.ullage) * cross_sectional_area
-                volume_gas = self.cylinder.volume() - volume_liquid
-                return volume_gas*self.gas + volume_liquid*self.liquid
-        return return_mass
+        liquid_mass = liquid_volume * self.liquid.density
+        gas_mass = (self.tank.volume() - liquid_volume) * self.gas.density
+
+        return gas_mass + liquid_mass
 
     def netMassFlowRate(self, t):
-        # gas going in, mass leaving
-        pass
+        current_height = self.full_height - self.ullage.getValue(t)
+        delta_volume = Function(self.tank.filled_volume).differentiate(current_height)
+
+        return -delta_volume * self.liquid.density + delta_volume * self.gas.density
 
     def liquidVolume(self, t):
-        def return_liquid_volume(time):
-            cross_sectional_area = self.cap.area()
-            volume_liquid = (self.height-self.ullage) * cross_sectional_area
-            return volume_liquid
-        return return_liquid_volume
-
+        return self.tank.filled_volume(self.height-self.ullage.getValue(t))
 
 
 # @ompro07
