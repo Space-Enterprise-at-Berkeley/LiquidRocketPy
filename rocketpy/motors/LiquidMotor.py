@@ -44,7 +44,7 @@ class LiquidMotor(Motor):
 
 
 class Tank(ABC):
-    def __init__(self, name: str, diameter, height, gas: Fluid, liquid: Fluid = 0, endcap: str = "flat"):
+    def __init__(self, name: str, diameter, height, gas: Fluid, liquid: Fluid, endcap: str = "flat"):
         self.name = name
         self.diameter = diameter
         self.height = height
@@ -180,6 +180,7 @@ class MassFlowRateBasedTank(Tank):
 
 
 # @phmbressan
+# @curtisjhu
 class UllageBasedTank(Tank):
     def __init__(
         self,
@@ -195,8 +196,6 @@ class UllageBasedTank(Tank):
 
         # ullage v. time
         self.ullage = Function(ullage)
-        
-        # We are not accounting for pressurized fluids
 
     def mass(self, t):
         liquid_volume = self.liquidVolume(t)
