@@ -108,6 +108,9 @@ class Cylinder(Geometry3D):
     def filled_centroid(self):
         return self.filled_height / 2
 
+    def radius(self, h):
+        return self.radius
+
     def volume_to_height(self, volume):
         return volume / self.sectional_area
 
@@ -184,6 +187,26 @@ class SphericalCylinder(Geometry3D):
             return (
                 fixed_volume + (hemisphere.volume() - hemisphere.filled_volume())
             )
+
+    def radius(self, h):
+        if h < self.radius:
+            return sqrt((self.radius-h)**2 + self.radius**2)
+        elif h < self.full_height - self.radius:
+            return self.radius
+        else:
+            resulting_height = h - (self.cylinder_height - self.radius)
+            return sqrt(resulting_height**2 + self.radius**2)
+
+    def volume_to_height(self, vol):
+        if h < self.radius:
+            return Hemisphere(self.radius).volume_to_height(vol)
+        elif h < self.full_height - self.radius:
+            resulting_vol = vol - Hemisphere(self.radius).volume()
+            cylinder_height = resulting_vol / (np.pi * self.radius**2)
+            return self.radius + cylinder_height
+        else:
+            resulting_vol = vol - Hemisphere(self.radius).volume() - Cylinder(self.radius, self.cylinder_height).volume()
+            return self.radius - Hemisphere(self.radius).volume_to_height(resulting_vol)
 
     @Geometry.centroid.getter
     def centroid(self):
