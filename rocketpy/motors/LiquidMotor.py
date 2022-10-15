@@ -142,7 +142,8 @@ class Tank(ABC):
             return (
                 self.cap.centroid * cap_mass + self.cylinder.centroid * cylinder_mass
             ) / (cap_mass + cylinder_mass)
-
+#@lperi03
+#@curtisjhu
     def inertiaTensor(self, t):
         """Returns the inertia tensor of the tank's fluids as a function of
         time.
@@ -157,7 +158,21 @@ class Tank(ABC):
         Function
             Inertia tensor of the tank's fluids as a function of time.
         """
-        ...
+        #tensor will just be a 3*3 matrix with diagonal entries filled
+        k = (np.pi * self.liquid.density)
+        ullage = self.tank.volume_to_height(self.liquidVolume(t))
+
+        integrand = lambda h: self.tank.radius(h)**2 * (h - self.centerOfMass(t))**2
+        tensorX = tensorY = k * Function(integrand).integral(0, ullage)
+
+        integrand = lambda h: (self.tank.radius(h))**4
+        tensorZ = (k/2)*Function(integrand).integral(0, ullage)
+
+        tensorMatrix = np.array[[tensorX, 0, 0], [0, tensorY, 0], [0, 0, tensorZ]]
+        return tensorMatrix
+        
+        
+        
 
 # @MrGribel
 class MassFlowRateBasedTank(Tank):
