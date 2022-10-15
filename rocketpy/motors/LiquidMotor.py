@@ -129,7 +129,7 @@ class Tank(ABC):
         Function
             Center of mass of the tank's fluids as a function of time.
         """
-        liquid_volume = self.liquidVolume(t)
+        liquid_volume = Function(self.liquidVolume)
         if liquid_volume < self.cap.volume:
             self.cap.filled_volume = liquid_volume
             return self.cap.filled_centroid
@@ -211,23 +211,25 @@ class UllageBasedTank(Tank):
 
         # ullage v. time
         self.ullage = Function(ullage)
+        self.ullage.setInputs("time")
+        self.ullage.setOutputs("height(meters)")
 
     def mass(self, t):
-        liquid_volume = self.liquidVolume(t)
+        liquid_volume = Function(self.liquidVolume(t))
 
         liquid_mass = liquid_volume * self.liquid.density
-        gas_mass = (self.tank.volume() - liquid_volume) * self.gas.density
+        gas_mass = (Function(self.tank.volume) - liquid_volume) * self.gas.density
 
         return gas_mass + liquid_mass
 
     def netMassFlowRate(self, t):
-        current_height = self.full_height - self.ullage.getValue(t)
+        current_height = self.full_height - self.ullage
         delta_volume = Function(self.tank.filled_volume).differentiate(current_height)
 
-        return -delta_volume * self.liquid.density + delta_volume * self.gas.density
+        return (-delta_volume * self.liquid.density) + (delta_volume * self.gas.density)
 
     def liquidVolume(self, t):
-        return self.tank.filled_volume(self.height-self.ullage.getValue(t))
+        return self.tank.filled_volume(self.height-self.ullage.getValu)
 
 
 # @ompro07
