@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__author__ = "Giovani Hidalgo Ceotto, Oscar Mauricio Prada Ramirez, João Lemes Gribel Soares, Mateus Stano and Pedro Henrique Marinho Bressan"
+__author__ = "Giovani Hidalgo Ceotto, Oscar Mauricio Prada Ramirez, João Lemes Gribel Soares, Mateus Stano, Pedro Henrique Marinho Bressan, Patrick Bales, Lakshman Peri, Gautam Yarramreddy, Curtis Hu, and William Bradford"
 __copyright__ = "Copyright 20XX, RocketPy Team"
 __license__ = "MIT"
 
@@ -11,10 +11,11 @@ from scipy import integrate
 
 from rocketpy.Function import Function
 from rocketpy.motors import Motor
-from rocketpy.supplement import Disk, Cylinder, Hemisphere
+from rocketpy.supplement import Disk, Cylinder, Hemisphere, SphericalCylinder
 from rocketpy.motors import Fluid
 
 # @Stano
+# @PBales1
 class LiquidMotor(Motor):
     def __init__(
         self,
@@ -31,7 +32,8 @@ class LiquidMotor(Motor):
         pass
 
     def evaluateMassFlowRate(self):
-        pass
+        for tank in self.tanks:
+            tank.netMassFlowRate()
 
     def evaluateCenterOfMass(self):
         pass
