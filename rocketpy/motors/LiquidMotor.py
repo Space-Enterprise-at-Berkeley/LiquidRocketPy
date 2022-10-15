@@ -257,28 +257,29 @@ class MassBasedTank(Tank):
         self.diameter = diameter
         self.height = height
         self.endcap = endcap
-        self.liquid_mass = liquid_mass
-        self.gas_mass = gas_mass
         self.liquid = liquid
         self.gas = gas
 
+        self.liquid_mass = Function(liquid_mass)
+        self.liquid_mass.setInputs("time")
+        self.liquid_mass.setOutputs("liquid mass [kg]")
+        self.gas_mass = Function(gas_mass)
+        self.gas_mass.setInputs("time")
+        self.gas_mass.setOutputs("gas mass [kg]")
+
     def mass(self, t):
-        current_mass = Function.getValue(self.liquid_mass, t) + Function.getValue(self.gas_mass, t)
-        return Function(current_mass, t)
+        return self.liquid_mass + self.gas_mass
 
     def netMassFlowRate(self, t):
         tank_volume = 1/4*np.pi*self.height*(self.diameter ** 2) + 2*self.endcap
 
         liquid_initial_mass = self.liquid.denisty * tank_volume
-        liquid_current_mass = Function.getValue(self.liquid_mass, t)
-        liquid_mfr = (liquid_initial_mass - liquid_current_mass) / t
+        liquid_mfr = (liquid_initial_mass - self.liquid_mass) / t
 
-        gas_current_mass = Function.getValue(self.gas_mass, t)
-        gas_mfr = (0 - gas_current_mass) / t #initial gas mass is 0
+        gas_mfr = (0 - self.gas_mass) / t #initial gas mass is 0
 
-        return Function(liquid_mfr + gas_mfr, t)
+        return liquid_mfr + gas_mfr
 
     def liquidVolume(self, t):
         # density = m/V -> V_current = m_current/density
-        current_liquid_mass = Function.getValue(self.liquid_mass, t)
-        return Function(current_liquid_mass / self.liquid.density, t)
+        return self.liquid_mass / self.liquid.density
